@@ -1,3 +1,19 @@
+/*
+Running Training Management System
+----------------------------------
+Author: Gustavo Borges
+Language: C++
+Purpose: Academic project (First semester)
+
+Description:
+Console-based system that allows runners to register training sessions
+and sort them by date, pace, duration or distance.
+
+This project uses only concepts studied during the first semester
+of the Science and Technology undergraduate program.
+*/
+
+
 #include <iostream>
 #include <cstring>
 #include <iomanip>
@@ -6,456 +22,356 @@ using namespace std;
 
 #define MAX 50
 
-struct Data{
-    int dia;
-    int mes;
-    int ano;
+struct Date {
+    int day;
+    int month;
+    int year;
 };
 
-struct Corrida{
-    float duracao_em_minutos;
-    float distancia_em_km;
-    Data data_do_treino;
-    float pace_corrida;
+struct Run {
+    float duration_in_minutes;
+    float distance_in_km;
+    Date training_date;
+    float pace;
 };
 
-// Função para calcular o pace médio
-float calcular_pace (float distancia, float duracao){
-    float pace = 0.00;
-    pace = (duracao/distancia);
+// Calculates average pace
+float calculate_pace(float distance, float duration) {
+    float pace = 0.0;
+    pace = duration / distance;
     return pace;
-};
+}
 
-// Verifica se o ano é bissexto para validar fevereiro
-bool verifica_bissexto(Data &d){
-    if ((d.ano % 4 == 0 && d.ano % 100 != 0) || 
-        (d.ano % 400 == 0)) {
-        return 1;
+// Checks if the year is leap year
+bool is_leap_year(Date &d) {
+    if ((d.year % 4 == 0 && d.year % 100 != 0) ||
+        (d.year % 400 == 0)) {
+        return true;
     } else {
-        return 0;
+        return false;
     }
 }
 
-// Leitura dos campos da data
-void ler_data(Data &d){
-    cout << "Dia: ";
-    cin >> d.dia;
-    cout << "Mes: ";
-    cin >> d.mes;
-    cout << "Ano: ";
-    cin >> d.ano;
+// Reads date fields
+void read_date(Date &d) {
+    cout << "Day: ";
+    cin >> d.day;
+    cout << "Month: ";
+    cin >> d.month;
+    cout << "Year: ";
+    cin >> d.year;
 }
 
-//Valida a data com o calendário
-void validar_data (Data &d){
-    bool bissexto;
-    bissexto = verifica_bissexto (d);
-    while (((d.dia < 1) || (d.dia > 31)) || 
-            ((d.mes < 1) || (d.mes > 12)) || 
-            (((d.mes == 2) || (d.mes == 4) || 
-            (d.mes == 6) || (d.mes == 9) || 
-            (d.mes == 11)) && (d.dia == 31)) || 
-            ((bissexto == 0) && (d.mes == 2) && (d.dia > 28)) || 
-            ((bissexto == 1) && (d.mes == 2) && (d.dia > 29))){
+// Validates date using calendar rules
+void validate_date(Date &d) {
+    bool leap;
+    leap = is_leap_year(d);
 
-        if ((d.dia < 1) || (d.dia > 31)){
-                cout << "O dia digitado nao existe. Digite a data novamente. " << endl;
-                ler_data (d);
-            }
+    while (((d.day < 1) || (d.day > 31)) ||
+           ((d.month < 1) || (d.month > 12)) ||
+           (((d.month == 2) || (d.month == 4) ||
+             (d.month == 6) || (d.month == 9) ||
+             (d.month == 11)) && (d.day == 31)) ||
+           ((leap == false) && (d.month == 2) && (d.day > 28)) ||
+           ((leap == true) && (d.month == 2) && (d.day > 29))) {
 
-        if ((d.mes < 1) || (d.mes > 12)){
-                cout << "O mes digitado nao existe. Digite a data novamente. " << endl;
-                ler_data (d);
-            }
-
-        if (((d.mes == 2) ||
-            (d.mes == 4) || 
-            (d.mes == 6) || 
-            (d.mes == 9) || 
-            (d.mes == 11)) && (d.dia == 31)){
-                cout << "O mes digitado nao possui dia 31. Digite a data novamente. " << endl;
-                ler_data(d); 
+        if ((d.day < 1) || (d.day > 31)) {
+            cout << "Invalid day. Enter the date again." << endl;
+            read_date(d);
         }
 
-        bissexto = verifica_bissexto (d);
+        if ((d.month < 1) || (d.month > 12)) {
+            cout << "Invalid month. Enter the date again." << endl;
+            read_date(d);
+        }
 
-        if ((bissexto == 0) && (d.mes == 2) && (d.dia > 28)){
-                cout << "O ano que voce colocou nao possui este dia no mes de fevereiro. Digite a data novamente. " << endl;
-                ler_data(d); 
+        if (((d.month == 2) ||
+             (d.month == 4) ||
+             (d.month == 6) ||
+             (d.month == 9) ||
+             (d.month == 11)) && (d.day == 31)) {
+            cout << "This month does not have day 31. Enter the date again." << endl;
+            read_date(d);
+        }
+
+        leap = is_leap_year(d);
+
+        if ((leap == false) && (d.month == 2) && (d.day > 28)) {
+            cout << "February does not have this day in the given year. Enter the date again." << endl;
+            read_date(d);
         }
     }
 }
 
-// Cadastra novos treinos e acumula em um vetor mais global
-void ler_treinos (int quantidade_de_treinos, Corrida treino[], int &total_treinos){
-    int i;
+// Registers runs and accumulates them in the array
+void read_runs(int amount, Run runs[], int &total_runs) {
     cout << endl;
-    cout << "Perfeito! Agora, vamos adicionar os treinos." << endl;
+    cout << "Great! Let's add the runs." << endl;
 
-    for (int i = total_treinos; i < total_treinos + quantidade_de_treinos; i++) {
-        cout << "Digite a data do treino " << i + 1 << "." << endl;
-        ler_data(treino[i].data_do_treino);
-        validar_data(treino[i].data_do_treino);
+    for (int i = total_runs; i < total_runs + amount; i++) {
+        cout << "Enter the date of run " << i + 1 << ":" << endl;
+        read_date(runs[i].training_date);
+        validate_date(runs[i].training_date);
 
-        cout << "Digite a duracao da corrida em MINUTOS: ";
-        cin >> treino[i].duracao_em_minutos;
+        cout << "Enter duration in MINUTES: ";
+        cin >> runs[i].duration_in_minutes;
 
-        while (treino[i].duracao_em_minutos <= 0) {
-            cout << "Duracao invalida! Digite novamente: ";
-            cin >> treino[i].duracao_em_minutos;
+        while (runs[i].duration_in_minutes <= 0) {
+            cout << "Invalid duration. Enter again: ";
+            cin >> runs[i].duration_in_minutes;
         }
 
-        cout << "Digite a distancia da corrida em km: ";
-        cin >> treino[i].distancia_em_km;
+        cout << "Enter distance in km: ";
+        cin >> runs[i].distance_in_km;
         cout << endl;
 
-        while (treino[i].distancia_em_km <= 0) {
-            cout << "Distancia invalida! Digite novamente: ";
-            cin >> treino[i].distancia_em_km;
+        while (runs[i].distance_in_km <= 0) {
+            cout << "Invalid distance. Enter again: ";
+            cin >> runs[i].distance_in_km;
         }
 
-        treino[i].pace_corrida = calcular_pace(
-            treino[i].distancia_em_km,
-            treino[i].duracao_em_minutos
+        runs[i].pace = calculate_pace(
+            runs[i].distance_in_km,
+            runs[i].duration_in_minutes
         );
     }
 
-    total_treinos += quantidade_de_treinos;
-
+    total_runs += amount;
 }
 
-// Escolher o filtro de visualização
-void ler_filtro (int &criterio_ordenacao, int &filtro){
-    filtro = 0;
+// Reads sorting filter
+void read_filter(int &sorting_criteria, int &order) {
+    order = 0;
 
     cout << endl;
-    cout << "1 - Ordenar os treinos por data." << endl;
-    cout << "2 - Ordenar os treinos por pace." << endl;
-    cout << "3 - Ordenar os treinos por duracao." << endl;
-    cout << "4 - Ordenar os treinos por distancia." << endl;
-    cin >> criterio_ordenacao;
+    cout << "1 - Sort by date." << endl;
+    cout << "2 - Sort by pace." << endl;
+    cout << "3 - Sort by duration." << endl;
+    cout << "4 - Sort by distance." << endl;
+    cin >> sorting_criteria;
 
-    while ((criterio_ordenacao !=1) && (criterio_ordenacao != 2) && (criterio_ordenacao !=3) && (criterio_ordenacao != 4)){
-        cout << "Entrada invalida. Escolha uma opcao valida." << endl;
-        cin >> criterio_ordenacao;
-        cout << endl;
+    while (sorting_criteria < 1 || sorting_criteria > 4) {
+        cout << "Invalid option. Choose again." << endl;
+        cin >> sorting_criteria;
     }
 
-    while ((filtro != 1) && (filtro != 2)){
+    while (order != 1 && order != 2) {
         cout << endl;
-        cout << "1 - Crescente." << endl;
-        cout << "2 - Decrescente." << endl;
-        cin >> filtro;
+        cout << "1 - Ascending." << endl;
+        cout << "2 - Descending." << endl;
+        cin >> order;
     }
-
 }
 
-// Menu principal
-bool menu_inicial (int &opcao){
+// Main menu
+bool main_menu(int &option) {
     cout << endl;
-    cout << "1 - Adicionar treino." << endl;
-    cout << "2 - Sair." << endl << endl;
-    cin >> opcao;
+    cout << "1 - Add run." << endl;
+    cout << "2 - Exit." << endl << endl;
+    cin >> option;
 
-    while ((opcao !=1) && (opcao != 2)){
-        cout << "Entrada invalida. Escolha uma das opcoes abaixo: (Digite o numero)" << endl;
-        cout << "1 - Adicionar treino." << endl;
-        cout << "2 - Sair" << endl;
-        cin >> opcao;
-        cout << endl;
+    while (option != 1 && option != 2) {
+        cout << "Invalid option. Choose again." << endl;
+        cin >> option;
     }
 
-    if (opcao == 2){
-        return 0;
-    } else {
-        return 1;
-    }
-    
+    return option == 1;
 }
 
-// Função de ordenar por data
-void ordenar_por_data (Corrida treino[], int quantidade_de_treinos, int filtro){
-    int i, j;
-    Corrida aux;
+// Sort by date
+void sort_by_date(Run runs[], int total, int order) {
+    Run temp;
 
-    if (filtro == 1){ //crescente
-        for (i=0;i<quantidade_de_treinos-1;i++) {
-            for (j=i+1;j<quantidade_de_treinos;j++) {
+    for (int i = 0; i < total - 1; i++) {
+        for (int j = i + 1; j < total; j++) {
+            bool condition;
 
-                if ((treino[i].data_do_treino.ano > treino[j].data_do_treino.ano) ||
-
-                    (treino[i].data_do_treino.ano == treino[j].data_do_treino.ano &&
-                    treino[i].data_do_treino.mes > treino[j].data_do_treino.mes) ||
-
-                    (treino[i].data_do_treino.ano == treino[j].data_do_treino.ano &&
-                    treino[i].data_do_treino.mes == treino[j].data_do_treino.mes &&
-                    treino[i].data_do_treino.dia > treino[j].data_do_treino.dia)) {
-                        aux = treino[i];
-                        treino[i] = treino[j];
-                        treino[j] = aux;
-                }
+            if (order == 1) {
+                condition =
+                    (runs[i].training_date.year > runs[j].training_date.year) ||
+                    (runs[i].training_date.year == runs[j].training_date.year &&
+                     runs[i].training_date.month > runs[j].training_date.month) ||
+                    (runs[i].training_date.year == runs[j].training_date.year &&
+                     runs[i].training_date.month == runs[j].training_date.month &&
+                     runs[i].training_date.day > runs[j].training_date.day);
+            } else {
+                condition =
+                    (runs[i].training_date.year < runs[j].training_date.year) ||
+                    (runs[i].training_date.year == runs[j].training_date.year &&
+                     runs[i].training_date.month < runs[j].training_date.month) ||
+                    (runs[i].training_date.year == runs[j].training_date.year &&
+                     runs[i].training_date.month == runs[j].training_date.month &&
+                     runs[i].training_date.day < runs[j].training_date.day);
             }
-        }
-    }
 
-    if (filtro == 2){ //decrescente
-        for (i = 0; i < quantidade_de_treinos - 1; i++) {
-            for (j = i + 1; j < quantidade_de_treinos; j++) {
-
-                if ((treino[i].data_do_treino.ano < treino[j].data_do_treino.ano) ||
-
-                    (treino[i].data_do_treino.ano == treino[j].data_do_treino.ano &&
-                    treino[i].data_do_treino.mes < treino[j].data_do_treino.mes) ||
-
-                    (treino[i].data_do_treino.ano == treino[j].data_do_treino.ano &&
-                    treino[i].data_do_treino.mes == treino[j].data_do_treino.mes &&
-                    treino[i].data_do_treino.dia < treino[j].data_do_treino.dia)) {
-                        aux = treino[i];
-                        treino[i] = treino[j];
-                        treino[j] = aux;
-                }
+            if (condition) {
+                temp = runs[i];
+                runs[i] = runs[j];
+                runs[j] = temp;
             }
         }
     }
 }
 
-// Função de ordenar por pace
-void ordenar_por_pace (Corrida treino[], int quantidade_de_treinos, int filtro){
-    int i, j;
-    Corrida aux;
+// Sort by pace
+void sort_by_pace(Run runs[], int total, int order) {
+    Run temp;
 
-    if (filtro == 1){ //crescente
-        for (i=0;i<quantidade_de_treinos-1;i++) {
-            for (j=i+1;j<quantidade_de_treinos;j++) {
-                if ((treino[i].pace_corrida) > (treino[j].pace_corrida)) {
-                    aux = treino[i];
-                    treino[i] = treino[j];
-                    treino[j] = aux;
-                }
-            }
-        }
-    }
-    if (filtro == 2){ //decrescente
-        for (i=0;i<quantidade_de_treinos-1;i++) {
-            for (j=i+1;j<quantidade_de_treinos;j++) {
-                if ((treino[i].pace_corrida) < (treino[j].pace_corrida)) {
-                    aux = treino[i];
-                    treino[i] = treino[j];
-                    treino[j] = aux;
-                }
+    for (int i = 0; i < total - 1; i++) {
+        for (int j = i + 1; j < total; j++) {
+            if ((order == 1 && runs[i].pace > runs[j].pace) ||
+                (order == 2 && runs[i].pace < runs[j].pace)) {
+                temp = runs[i];
+                runs[i] = runs[j];
+                runs[j] = temp;
             }
         }
     }
 }
 
-// Função de ordenar por duração
-void ordenar_por_duracao (Corrida treino[], int quantidade_de_treinos, int filtro){
-    int i, j;
-    Corrida aux;
+// Sort by duration
+void sort_by_duration(Run runs[], int total, int order) {
+    Run temp;
 
-    if (filtro == 1){ //crescente
-        for (i=0;i<quantidade_de_treinos-1;i++) {
-            for (j=i+1;j<quantidade_de_treinos;j++) {
-                if ((treino[i].duracao_em_minutos) > (treino[j].duracao_em_minutos)) {
-                    aux = treino[i];
-                    treino[i] = treino[j];
-                    treino[j] = aux;
-                }
-            }
-        }
-    }
-    if (filtro == 2){ //decrescente
-        for (i=0;i<quantidade_de_treinos-1;i++) {
-            for (j=i+1;j<quantidade_de_treinos;j++) {
-                if ((treino[i].duracao_em_minutos) < (treino[j].duracao_em_minutos)) {
-                    aux = treino[i];
-                    treino[i] = treino[j];
-                    treino[j] = aux;
-                }
+    for (int i = 0; i < total - 1; i++) {
+        for (int j = i + 1; j < total; j++) {
+            if ((order == 1 && runs[i].duration_in_minutes > runs[j].duration_in_minutes) ||
+                (order == 2 && runs[i].duration_in_minutes < runs[j].duration_in_minutes)) {
+                temp = runs[i];
+                runs[i] = runs[j];
+                runs[j] = temp;
             }
         }
     }
 }
 
-// Função de ordenar por distância
-void ordenar_por_distancia (Corrida treino[], int quantidade_de_treinos, int filtro){
-    int i, j;
-    Corrida aux;
+// Sort by distance
+void sort_by_distance(Run runs[], int total, int order) {
+    Run temp;
 
-    if (filtro == 1){ //crescente
-        for (i=0;i<quantidade_de_treinos-1;i++) {
-            for (j=i+1;j<quantidade_de_treinos;j++) {
-                if ((treino[i].distancia_em_km) > (treino[j].distancia_em_km)) {
-                    aux = treino[i];
-                    treino[i] = treino[j];
-                    treino[j] = aux;
-                }
-            }
-        }
-    }
-    if (filtro == 2){ //decrescente
-        for (i=0;i<quantidade_de_treinos-1;i++) {
-            for (j=i+1;j<quantidade_de_treinos;j++) {
-                if ((treino[i].distancia_em_km) < (treino[j].distancia_em_km)) {
-                    aux = treino[i];
-                    treino[i] = treino[j];
-                    treino[j] = aux;
-                }
+    for (int i = 0; i < total - 1; i++) {
+        for (int j = i + 1; j < total; j++) {
+            if ((order == 1 && runs[i].distance_in_km > runs[j].distance_in_km) ||
+                (order == 2 && runs[i].distance_in_km < runs[j].distance_in_km)) {
+                temp = runs[i];
+                runs[i] = runs[j];
+                runs[j] = temp;
             }
         }
     }
 }
 
-// Exibe os resultados formatados
-void imprimir_ordenacao (Corrida treino[], int quantidade_de_treinos, int filtro, int escolha_menu,  char nome[]){
-    int i;
-    
+// Displays sorted runs
+void print_runs(Run runs[], int total, int order, int criteria, char user_name[]) {
     cout << endl << endl;
-    cout << nome << ", ";
+    cout << user_name << ", your runs sorted by ";
 
-    cout << "os seus treinos ordenados por ";
-    
-    if (escolha_menu == 1){
-        cout << "data ";
-    } else if (escolha_menu == 2){
-        cout << "pace ";
-    } else if (escolha_menu == 3){
-        cout << "duracao ";
-    } else{
-        cout << "distancia ";
+    if (criteria == 1) cout << "date ";
+    else if (criteria == 2) cout << "pace ";
+    else if (criteria == 3) cout << "duration ";
+    else cout << "distance ";
+
+    if (order == 1) cout << "in ascending order ";
+    else cout << "in descending order ";
+
+    cout << "are:" << endl << endl;
+
+    for (int i = 0; i < total; i++) {
+        cout << "Run on " << runs[i].training_date.day << "/"
+             << runs[i].training_date.month << "/"
+             << runs[i].training_date.year << endl;
+
+        cout << "Distance: " << fixed << setprecision(2)
+             << runs[i].distance_in_km << " km" << endl;
+
+        cout << "Duration: " << runs[i].duration_in_minutes << " min" << endl;
+        cout << "Pace: " << runs[i].pace << endl << endl;
     }
-
-    if (filtro == 1){
-        cout << "em ordem crescente ";
-    } else {
-        cout << "em ordem decrescente ";
-    }
-    cout << "ficaram da seguinte forma: " << endl << endl;
-
-    for (i=0;i<quantidade_de_treinos;i++){
-        cout << "Corrida do dia " << treino[i].data_do_treino.dia << "/" << treino[i].data_do_treino.mes << "/" << treino[i].data_do_treino.ano << ":" << endl;
-        cout << "Distancia da corrida: " << fixed << setprecision(2) << treino[i].distancia_em_km << "km;" << endl;
-        cout << "Duracao da corrida: " << treino[i].duracao_em_minutos << "min.;" << endl;
-        cout << "Pace da corrida: " << treino[i].pace_corrida << endl << endl;
-    }
-
 }
 
-int main (){
+int main() {
+    int amount, menu_option, order, choice, criteria;
+    int finish_program = 1;
+    int total_runs = 0;
+    char user_name[MAX];
 
-    int quantidade_de_treinos, menu, filtro, escolha,criterio_ordenacao;
-    int finaliza_programa = 1;
-    int total_treinos = 0;
-    char nome_usuario [MAX];
+    Run runs[MAX];
 
-    Corrida treino[MAX];
+    cout << "Welcome to the Running Training Management System." << endl;
+    cout << "Here you can sort your runs by date, duration, distance or pace." << endl;
+    cout << "Let's begin!" << endl;
 
-    cout << "Seja bem-vindo ao Sistema de Treinos de Corrida." << endl;
-    cout << "Aqui, voce conseguira: " << endl << "Ordenar seus treinos por data, duracao, distancia ou pace." << endl; 
-    cout << "Vamos comecar!" << endl;
+    finish_program = main_menu(menu_option);
 
-    cout << "Voce deseja (Digite o numero): " << endl;
-
-    finaliza_programa = menu_inicial (menu);
-
-    switch (menu){
-    case 1:
-        cout << "Quantos treinos voce ira cadastrar? (Maximo 50)" << endl;
-        cin >> quantidade_de_treinos;
-        break;
-    case 2:
-        cout << "Ate mais!" << endl;
+    if (!finish_program) {
+        cout << "Goodbye!" << endl;
         return 0;
     }
 
-    while ((quantidade_de_treinos < 1) || (quantidade_de_treinos > 50)){
-        cout << "Quantidade fora dos limites, digite novamente." << endl;
-        cin >> quantidade_de_treinos;
-        cout << endl;
+    cout << "How many runs do you want to register? (Max 50)" << endl;
+    cin >> amount;
+
+    while (amount < 1 || amount > 50) {
+        cout << "Invalid amount. Enter again." << endl;
+        cin >> amount;
     }
 
-    cout << "Qual o seu nome? ";
+    cout << "Enter your name: ";
     cin.ignore();
-    cin.getline(nome_usuario, MAX);
+    cin.getline(user_name, MAX);
 
+    read_runs(amount, runs, total_runs);
 
-    ler_treinos (quantidade_de_treinos, treino, total_treinos);    
+    read_filter(criteria, order);
 
-    cout << "Qual filtro voce deseja? (Digite o numero) " << endl;
-        
-    ler_filtro (criterio_ordenacao, filtro);
+    if (criteria == 1) sort_by_date(runs, total_runs, order);
+    else if (criteria == 2) sort_by_pace(runs, total_runs, order);
+    else if (criteria == 3) sort_by_duration(runs, total_runs, order);
+    else sort_by_distance(runs, total_runs, order);
 
-    switch (criterio_ordenacao){
-        case 1:
-            ordenar_por_data (treino, total_treinos, filtro);
-            break;
-        case 2:
-            ordenar_por_pace(treino, total_treinos, filtro);
-            break;
-        case 3:
-            ordenar_por_duracao (treino, total_treinos, filtro);
-            break;
-        case 4:
-            ordenar_por_distancia (treino, total_treinos, filtro);
-            break;
-    }
-
-    imprimir_ordenacao(treino, total_treinos, filtro, criterio_ordenacao, nome_usuario);
+    print_runs(runs, total_runs, order, criteria, user_name);
 
     do {
         cout << endl;
-        cout << "Agora, voce deseja: " << endl;
-        cout << "1 - Adicionar mais treinos" << endl;
-        cout << "2 - Filtrar os treinos de forma diferente" << endl;
-        cout << "3 - Finalizar o programa" << endl;
-        cin >> escolha;
+        cout << "What do you want to do now?" << endl;
+        cout << "1 - Add more runs" << endl;
+        cout << "2 - Apply a different filter" << endl;
+        cout << "3 - Exit program" << endl;
+        cin >> choice;
 
-        while (escolha != 1 && escolha != 2 && escolha!=3){
-            cout << "Essa opcao nao existe. Digite novamente: " << endl;
-            cin >> escolha;
+        while (choice < 1 || choice > 3) {
+            cout << "Invalid option. Choose again." << endl;
+            cin >> choice;
         }
 
-    switch (escolha){
-        case 1:
-            cout << endl;
-            cout << "Quantos treinos voce ira cadastrar? (Maximo 50)" << endl;
-            cin >> quantidade_de_treinos;
+        if (choice == 1) {
+            cout << "How many runs do you want to add?" << endl;
+            cin >> amount;
 
-            while (total_treinos + quantidade_de_treinos > MAX) {
-                cout << "Quantidade excede o limite de 50 treinos." << endl;
-                cout << "Voce ainda pode adicionar no maximo " << (MAX - total_treinos) << " treinos." << endl;
-                cin >> quantidade_de_treinos;
+            while (total_runs + amount > MAX) {
+                cout << "Limit exceeded. You can add up to "
+                     << (MAX - total_runs) << " more runs." << endl;
+                cin >> amount;
             }
 
-            ler_treinos (quantidade_de_treinos, treino, total_treinos);
-            break;
-        case 2:
-            ler_filtro (criterio_ordenacao, filtro);
+            read_runs(amount, runs, total_runs);
+        } 
+        else if (choice == 2) {
+            read_filter(criteria, order);
 
-                switch (criterio_ordenacao){
-                    case 1:
-                        ordenar_por_data (treino, total_treinos, filtro);
-                        break;
-                    case 2:
-                        ordenar_por_pace(treino, total_treinos, filtro);
-                        break;
-                    case 3:
-                        ordenar_por_duracao (treino, total_treinos, filtro);
-                        break;
-                    case 4:
-                        ordenar_por_distancia (treino, total_treinos, filtro);
-                        break;
-                }
+            if (criteria == 1) sort_by_date(runs, total_runs, order);
+            else if (criteria == 2) sort_by_pace(runs, total_runs, order);
+            else if (criteria == 3) sort_by_duration(runs, total_runs, order);
+            else sort_by_distance(runs, total_runs, order);
 
-                imprimir_ordenacao (treino, total_treinos, filtro, criterio_ordenacao, nome_usuario);
+            print_runs(runs, total_runs, order, criteria, user_name);
+        } 
+        else {
+            cout << "Goodbye!" << endl;
+            finish_program = 0;
+        }
 
-            break;
-        case 3:
-            cout << "Ate mais!" << endl;
-            finaliza_programa = 0;
-    }
-
-    } while (finaliza_programa != 0);
+    } while (finish_program != 0);
 
     return 0;
 }
